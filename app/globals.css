@@ -248,4 +248,10 @@
   .rise {
     animation: fade-in 0.4s ease both;
   }
+  /* текст виден сразу и не зависит от скрипта анимации */
+  [data-reveal] {
+    opacity: 1 !important;
+    filter: none !important;
+    transform: none !important;
+  }
 }

@@ -16,6 +16,7 @@ export function Reveal({ children, delay = 0, className, y = 30, blur = 8, durat
   const reduce = useReducedMotion();
   return (
     <motion.div
+      data-reveal
       className={className}
       initial={reduce ? { opacity: 0, y: 0, filter: "blur(0px)" } : { opacity: 0, y, filter: `blur(${blur}px)` }}
       // конечное состояние всегда без сдвига и размытия — даже если сервер отдал блок «размытым»

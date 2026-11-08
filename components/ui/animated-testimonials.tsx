@@ -50,6 +50,7 @@ export function AnimatedTestimonials({ testimonials, autoplay = true, interval =
           <div className="absolute inset-[2px] grid place-items-center rounded-full bg-[#0c0c0f]">
             <AnimatePresence mode="wait">
               <motion.span
+                data-reveal
                 key={active}
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -66,6 +67,7 @@ export function AnimatedTestimonials({ testimonials, autoplay = true, interval =
         <div className="min-h-[260px] text-center md:min-h-[230px] md:text-left">
           <AnimatePresence mode="wait">
             <motion.figure
+              data-reveal
               key={active}
               initial={{ opacity: 0, y: reduce ? 0 : 16 }}
               animate={{ opacity: 1, y: 0 }}
@@ -76,6 +78,7 @@ export function AnimatedTestimonials({ testimonials, autoplay = true, interval =
                 <span aria-hidden="true">«</span>
                 {t.quote.split(" ").map((word, i) => (
                   <motion.span
+                    data-reveal
                     key={i}
                     initial={reduce ? { opacity: 0, y: 0, filter: "blur(0px)" } : { filter: "blur(10px)", opacity: 0, y: 5 }}
                     animate={{ filter: "blur(0px)", opacity: 1, y: 0 }}
