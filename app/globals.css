@@ -1,0 +1,250 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ---------- дизайн-токены CHROME (монохром: графит и хром) ---------- */
+@theme {
+  --color-bg: #08080a;
+  --color-bg-raised: #0c0c0f;
+  --color-bg-raised-2: #0f0f12;
+  --color-line: #1c1c20;
+  --color-line-strong: #26262b;
+  --color-text: #ededf0;
+  --color-text-muted: #8a8a92;
+  --color-text-dim: #7e7e86; /* в задании #6e6e76 (3,9:1) — чуть светлее ради контраста 4,5:1 */
+  --color-numeral: #3a3a40;
+  --color-chrome-light: #f4f4f6;
+  --color-chrome-dark: #bdbdc3;
+  --ease-chrome: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-inter-tight), system-ui, sans-serif;
+  --font-heading: var(--font-inter-tight), system-ui, sans-serif;
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-destructive: var(--destructive);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+}
+
+/* shadcn: тёмная тема по умолчанию, привязана к нашей палитре */
+:root,
+.dark {
+  --background: #08080a;
+  --foreground: #ededf0;
+  --card: #0c0c0f;
+  --card-foreground: #ededf0;
+  --popover: #0c0c0f;
+  --popover-foreground: #ededf0;
+  --primary: #f4f4f6;
+  --primary-foreground: #08080a;
+  --secondary: #0f0f12;
+  --secondary-foreground: #ededf0;
+  --muted: #0f0f12;
+  --muted-foreground: #8a8a92;
+  --accent: #1c1c20;
+  --accent-foreground: #ededf0;
+  --destructive: #e6e6ea;
+  --border: #1c1c20;
+  --input: #26262b;
+  --ring: #e6e6ea;
+  --radius: 1rem;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    scroll-behavior: smooth;
+    background: var(--color-bg);
+  }
+  body {
+    background: var(--color-bg);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  section[id] {
+    scroll-margin-top: 88px;
+  }
+  :focus-visible {
+    outline: 2px solid #e6e6ea;
+    outline-offset: 2px;
+  }
+  ::selection {
+    background: #e6e6ea;
+    color: #08080a;
+  }
+}
+
+/* ---------- хром ---------- */
+/* Хромированный текст с бегущим бликом */
+.chrome-text {
+  background: linear-gradient(110deg, #6e6e74 0%, #f4f4f6 18%, #8e8e95 36%, #ffffff 52%, #77777d 70%, #e6e6ea 86%, #6e6e74 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: sheen 7s linear infinite;
+}
+@keyframes sheen {
+  to {
+    background-position: 200% center;
+  }
+}
+
+/* светлый хром — заливка активных пилюль и главной кнопки */
+.chrome-fill {
+  background: linear-gradient(180deg, #f4f4f6, #bdbdc3);
+  color: #08080a;
+}
+
+/* CSS-фолбэк жидкого металла, пока грузится шейдер */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes blob {
+  0%,
+  100% {
+    border-radius: 48% 52% 60% 40% / 50% 45% 55% 50%;
+  }
+  33% {
+    border-radius: 60% 40% 45% 55% / 40% 60% 40% 60%;
+  }
+  66% {
+    border-radius: 42% 58% 52% 48% / 58% 42% 58% 42%;
+  }
+}
+.metal-orb {
+  background: conic-gradient(from 0deg, #141417, #e9e9ec, #3c3c42, #ffffff, #222226, #b5b5bb, #4a4a50, #f6f6f8, #141417);
+  animation:
+    spin 16s linear infinite,
+    blob 11s ease-in-out infinite;
+}
+
+/* металлическая обводка кнопок (видна всегда; шейдер накладывается сверху) */
+@property --metal-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+.metal-ring {
+  background: conic-gradient(from var(--metal-angle), #3a3a40, #f4f4f6, #6e6e74, #ffffff, #4a4a50, #e6e6ea, #3a3a40);
+  animation: metal-turn 6s linear infinite;
+}
+@keyframes metal-turn {
+  to {
+    --metal-angle: 360deg;
+  }
+}
+
+/* блик, проходящий по карточке услуг */
+.card-glint {
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+  transform: translateX(-160%) skewX(-20deg);
+  transition: transform 0.8s var(--ease-chrome);
+}
+.group:hover .card-glint,
+.group:focus-visible .card-glint {
+  transform: translateX(260%) skewX(-20deg);
+}
+
+/* орбита марок: полный оборот за 90 секунд, подписи контр-вращаются */
+.orbit-spin {
+  animation: spin 90s linear infinite;
+}
+.orbit-counter {
+  animation: spin 90s linear infinite reverse;
+}
+.orbit-paused .orbit-spin,
+.orbit-paused .orbit-counter {
+  animation-play-state: paused;
+}
+
+/* кольцо гарантии */
+.ring-spin {
+  animation: spin 40s linear infinite;
+}
+
+/* пин на карте */
+@keyframes ping-chrome {
+  from {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  to {
+    transform: scale(3.4);
+    opacity: 0;
+  }
+}
+.pin-pulse {
+  animation: ping-chrome 2.4s ease-out infinite;
+}
+
+/* появление первого экрана — на CSS, чтобы текст проявлялся сразу при отрисовке, не дожидаясь скриптов */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+    filter: blur(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+.rise {
+  animation: rise 1.2s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation-delay: var(--d, 0s);
+}
+
+/* ---------- меньше движения: бесконечные анимации отключаем ---------- */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .chrome-text,
+  .metal-orb,
+  .metal-ring,
+  .orbit-spin,
+  .orbit-counter,
+  .ring-spin,
+  .pin-pulse {
+    animation: none;
+  }
+  .card-glint {
+    transition: none;
+  }
+  .rise {
+    animation: fade-in 0.4s ease both;
+  }
+}
