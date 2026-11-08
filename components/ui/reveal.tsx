@@ -17,8 +17,9 @@ export function Reveal({ children, delay = 0, className, y = 30, blur = 8, durat
   return (
     <motion.div
       className={className}
-      initial={reduce ? { opacity: 0 } : { opacity: 0, y, filter: `blur(${blur}px)` }}
-      whileInView={reduce ? { opacity: 1 } : { opacity: 1, y: 0, filter: "blur(0px)" }}
+      initial={reduce ? { opacity: 0, y: 0, filter: "blur(0px)" } : { opacity: 0, y, filter: `blur(${blur}px)` }}
+      // конечное состояние всегда без сдвига и размытия — даже если сервер отдал блок «размытым»
+      whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
       viewport={{ once, margin: "-80px" }}
       transition={{ duration: reduce ? 0.3 : duration, delay: reduce ? 0 : delay, ease: [0.2, 0.7, 0.2, 1] }}
     >

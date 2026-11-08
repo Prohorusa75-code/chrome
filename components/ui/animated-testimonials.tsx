@@ -77,8 +77,8 @@ export function AnimatedTestimonials({ testimonials, autoplay = true, interval =
                 {t.quote.split(" ").map((word, i) => (
                   <motion.span
                     key={i}
-                    initial={reduce ? { opacity: 0 } : { filter: "blur(10px)", opacity: 0, y: 5 }}
-                    animate={reduce ? { opacity: 1 } : { filter: "blur(0px)", opacity: 1, y: 0 }}
+                    initial={reduce ? { opacity: 0, y: 0, filter: "blur(0px)" } : { filter: "blur(10px)", opacity: 0, y: 5 }}
+                    animate={{ filter: "blur(0px)", opacity: 1, y: 0 }}
                     transition={{ duration: 0.2, ease: "easeInOut", delay: reduce ? 0 : 0.02 * i }}
                     className="inline-block"
                   >

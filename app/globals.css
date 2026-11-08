@@ -139,6 +139,7 @@
   }
 }
 .metal-orb {
+  border-radius: 50%;
   background: conic-gradient(from 0deg, #141417, #e9e9ec, #3c3c42, #ffffff, #222226, #b5b5bb, #4a4a50, #f6f6f8, #141417);
   animation:
     spin 16s linear infinite,
