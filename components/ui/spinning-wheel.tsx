@@ -160,7 +160,8 @@ export function SpinningWheel({ className = "" }: { className?: string }) {
     let px = 0;
 
     const prepare = () => {
-      const size = Math.round(canvas.clientWidth * Math.min(window.devicePixelRatio || 1, 1.5));
+      const maxDpr = window.innerWidth < 768 ? 1.1 : 1.5; // на телефоне хватает меньшего разрешения
+      const size = Math.round(canvas.clientWidth * Math.min(window.devicePixelRatio || 1, maxDpr));
       if (!size || size === px) return;
       px = size;
       canvas.width = canvas.height = px;
@@ -290,8 +291,15 @@ export function SpinningWheel({ className = "" }: { className?: string }) {
       ctx.restore();
     };
 
+    let drawCost = 0; // сколько в среднем занимает кадр: на слабых устройствах рисуем реже
+    let skip = false;
+
     const loop = (now: number) => {
-      const dt = Math.min(0.05, (now - last) / 1000);
+      if (drawCost > 12 && (skip = !skip)) {
+        raf = visible ? requestAnimationFrame(loop) : 0;
+        return;
+      }
+      const dt = Math.min(0.1, (now - last) / 1000);
       last = now;
       const y = window.scrollY;
       scrollBoost = Math.min(9, scrollBoost + Math.abs(y - lastY) * 0.012);
@@ -300,7 +308,9 @@ export function SpinningWheel({ className = "" }: { className?: string }) {
       speed += (baseSpeed - speed) * (1 - Math.pow(0.22, dt));
       angle = (angle + (speed + scrollBoost) * dt) % (Math.PI * 2);
       light += (lightTarget - light) * (1 - Math.pow(0.02, dt));
+      const t0 = performance.now();
       draw();
+      drawCost += (performance.now() - t0 - drawCost) * 0.1;
       raf = visible ? requestAnimationFrame(loop) : 0;
     };
 
@@ -323,19 +333,27 @@ export function SpinningWheel({ className = "" }: { className?: string }) {
       }
     });
 
-    prepare();
-    draw();
-    // шрифт надписей мог ещё не загрузиться — перерисуем слои, когда он будет готов
-    document.fonts?.ready.then(() => {
-      px = 0;
-      prepare();
-    });
-    io.observe(canvas);
-    raf = requestAnimationFrame(loop);
+    // запускаем после первой отрисовки страницы и загрузки шрифта, чтобы не мешать её появлению
+    let stopped = false;
+    const start = () => {
+      document.fonts.ready.then(() => {
+        if (stopped) return;
+        prepare();
+        draw();
+        last = performance.now();
+        io.observe(canvas);
+        raf = requestAnimationFrame(loop);
+      });
+    };
+    const hasIdle = "requestIdleCallback" in window;
+    const startId = hasIdle ? window.requestIdleCallback(start, { timeout: 1500 }) : window.setTimeout(start, 400);
     window.addEventListener("pointermove", onMove, { passive: true });
     window.addEventListener("resize", onResize);
 
     return () => {
+      stopped = true;
+      if (hasIdle) window.cancelIdleCallback(startId);
+      else window.clearTimeout(startId);
       cancelAnimationFrame(raf);
       io.disconnect();
       window.removeEventListener("pointermove", onMove);
