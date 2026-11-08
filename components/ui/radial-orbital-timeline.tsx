@@ -108,14 +108,6 @@ export function RadialOrbitalTimeline({ brands }: { brands: Brand[] }) {
 
           <circle cx={CX} cy={CX} r="262" fill="url(#dial-face)" stroke="url(#dial-rim)" strokeWidth="1.5" />
 
-          {/* шкала медленно вращается, как и орбита в задании */}
-          <g className="orbit-spin" style={{ transformOrigin: "300px 300px" }}>
-            {TICKS.map((t, i) => (
-              <line key={i} x1={t.x1} y1={t.y1} x2={t.x2} y2={t.y2} stroke={t.major ? "#bdbdc3" : t.mid ? "#5a5a61" : "#2e2e34"} strokeWidth={t.major ? 2.5 : 1.2} />
-            ))}
-          </g>
-          <circle className="orbit-counter" cx={CX} cy={CX} r="196" fill="none" stroke="#3a3a40" strokeDasharray="2 9" style={{ transformOrigin: "300px 300px" }} />
-
           {/* стрелка со шлейфом */}
           <g style={{ transform: `rotate(${turn}deg)`, transformOrigin: "300px 300px", transition: "transform 1.1s cubic-bezier(.34,1.35,.64,1)" }}>
             <path d="M300 300 L300 72 A228 228 0 0 0 228 84 Z" fill="#ffffff" opacity=".05" />
@@ -126,6 +118,16 @@ export function RadialOrbitalTimeline({ brands }: { brands: Brand[] }) {
           </g>
 
           <circle cx={CX} cy={CX} r="150" fill="#0b0b0e" stroke="#26262b" />
+        </svg>
+
+        {/* шкала и пунктир — отдельные слои: вращение идёт на видеокарте, без перерисовки страницы */}
+        <svg viewBox="0 0 600 600" className="orbit-spin pointer-events-none absolute inset-0 size-full will-change-transform" aria-hidden="true">
+          {TICKS.map((t, i) => (
+            <line key={i} x1={t.x1} y1={t.y1} x2={t.x2} y2={t.y2} stroke={t.major ? "#bdbdc3" : t.mid ? "#5a5a61" : "#2e2e34"} strokeWidth={t.major ? 2.5 : 1.2} />
+          ))}
+        </svg>
+        <svg viewBox="0 0 600 600" className="orbit-counter pointer-events-none absolute inset-0 size-full will-change-transform" aria-hidden="true">
+          <circle cx={CX} cy={CX} r="196" fill="none" stroke="#3a3a40" strokeDasharray="2 9" />
         </svg>
 
         {/* показания в центре */}

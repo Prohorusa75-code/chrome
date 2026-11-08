@@ -20,13 +20,17 @@ export function MetalShader({ onlyInView = false, className, ...props }: Props) 
   const box = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // в Safari нет requestIdleCallback — там просто небольшая пауза
-    if ("requestIdleCallback" in window) {
-      const id = window.requestIdleCallback(() => setIdle(true), { timeout: 1500 });
-      return () => window.cancelIdleCallback(id);
-    }
-    const id = setTimeout(() => setIdle(true), 300);
-    return () => clearTimeout(id);
+    // шейдеры компилируются тяжело: запускаем, когда страница уже отрисовалась и отвечает.
+    // Пока их нет, видна такая же CSS-обводка.
+    let idleId = 0;
+    const timer = setTimeout(() => {
+      if ("requestIdleCallback" in window) idleId = window.requestIdleCallback(() => setIdle(true), { timeout: 2000 });
+      else setIdle(true);
+    }, 3500);
+    return () => {
+      clearTimeout(timer);
+      if (idleId) window.cancelIdleCallback(idleId);
+    };
   }, []);
 
   useEffect(() => {
