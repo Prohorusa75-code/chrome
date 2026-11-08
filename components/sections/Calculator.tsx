@@ -48,8 +48,8 @@ export function Calculator() {
                   aria-checked={brand === b.id}
                   onClick={() => setBrand(b.id)}
                   className={cn(
-                    "h-11 rounded-full px-5 text-[15px] transition-[background-color,color] duration-300",
-                    brand === b.id ? "chrome-fill font-medium" : "text-text-muted hover:text-text",
+                    "chip-fill h-11 rounded-full px-5 text-[15px] transition-colors duration-[450ms]",
+                    brand === b.id ? "text-[#08080a]" : "text-text-muted hover:text-text",
                   )}
                 >
                   {b.label}

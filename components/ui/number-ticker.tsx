@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, type ComponentPropsWithoutRef } from "react";
-import { useInView, useMotionValue, useReducedMotion, useSpring } from "motion/react";
+import { useInView, useMotionValue, useSpring } from "motion/react";
 
 import { cn } from "@/lib/utils";
 
@@ -20,21 +20,15 @@ const fmt = (n: number, d: number) =>
 
 export function NumberTicker({ value, startValue = 0, delay = 0, className, decimalPlaces = 0, ...props }: NumberTickerProps) {
   const ref = useRef<HTMLSpanElement>(null);
-  const reduce = useReducedMotion();
   const motionValue = useMotionValue(startValue);
   const springValue = useSpring(motionValue, { damping: 38, stiffness: 320, restDelta: 0.5 });
   const isInView = useInView(ref, { once: true, margin: "0px" });
 
   useEffect(() => {
     if (!isInView) return;
-    if (reduce) {
-      motionValue.jump(value);
-      springValue.jump(value);
-      return;
-    }
     const timer = setTimeout(() => motionValue.set(value), delay * 1000);
     return () => clearTimeout(timer);
-  }, [motionValue, springValue, isInView, delay, value, reduce]);
+  }, [motionValue, isInView, delay, value]);
 
   useEffect(
     () =>

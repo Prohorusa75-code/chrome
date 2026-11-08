@@ -72,8 +72,8 @@ export function Booking() {
   const field = "h-14 w-full rounded-2xl border border-line-strong bg-[#08080a] px-5 text-[16px] text-text placeholder:text-text-dim transition-colors focus:border-[#4a4a50]";
   const chip = (on: boolean, disabled = false) =>
     cn(
-      "rounded-full border transition-[background-color,border-color,color,transform] duration-300",
-      on ? "chrome-fill border-transparent" : "border-line-strong text-text hover:border-[#3a3a40]",
+      "chip-fill rounded-full border transition-[border-color,color,transform] duration-[450ms]",
+      on ? "border-transparent text-[#08080a]" : "border-line-strong text-text hover:border-[#3a3a40]",
       disabled && "cursor-not-allowed opacity-30 hover:border-line-strong",
     );
 
@@ -87,7 +87,7 @@ export function Booking() {
               <motion.div
                 key="done"
                 role="status"
-                initial={{ opacity: 0, y: reduce ? 0 : 20, filter: reduce ? "none" : "blur(8px)" }}
+                initial={{ opacity: 0, y: 20, filter: reduce ? "blur(0px)" : "blur(8px)" }}
                 animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.6, ease: [0.2, 0.7, 0.2, 1] }}

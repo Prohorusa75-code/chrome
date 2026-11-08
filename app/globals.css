@@ -120,30 +120,30 @@
   color: #08080a;
 }
 
-/* CSS-фолбэк жидкого металла, пока грузится шейдер */
 @keyframes spin {
   to {
     transform: rotate(360deg);
   }
 }
-@keyframes blob {
-  0%,
-  100% {
-    border-radius: 48% 52% 60% 40% / 50% 45% 55% 50%;
-  }
-  33% {
-    border-radius: 60% 40% 45% 55% / 40% 60% 40% 60%;
-  }
-  66% {
-    border-radius: 42% 58% 52% 48% / 58% 42% 58% 42%;
-  }
+
+/* пилюли: хромовая заливка плавно проявляется, а не появляется рывком */
+.chip-fill {
+  position: relative;
+  isolation: isolate;
 }
-.metal-orb {
-  border-radius: 50%;
-  background: conic-gradient(from 0deg, #141417, #e9e9ec, #3c3c42, #ffffff, #222226, #b5b5bb, #4a4a50, #f6f6f8, #141417);
-  animation:
-    spin 16s linear infinite,
-    blob 11s ease-in-out infinite;
+.chip-fill::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  z-index: -1;
+  border-radius: inherit;
+  background: linear-gradient(180deg, #f4f4f6, #bdbdc3);
+  opacity: 0;
+  transition: opacity 0.45s var(--ease-chrome);
+}
+.chip-fill[aria-pressed="true"]::before,
+.chip-fill[aria-checked="true"]::before {
+  opacity: 1;
 }
 
 /* металлическая обводка кнопок (видна всегда; шейдер накладывается сверху) */
@@ -228,30 +228,49 @@
   animation-delay: var(--d, 0s);
 }
 
-/* ---------- меньше движения: бесконечные анимации отключаем ---------- */
+/* появление диска на первом экране */
+@keyframes wheel-in {
+  from {
+    opacity: 0;
+    scale: 0.94;
+  }
+}
+.wheel-in {
+  animation: wheel-in 1.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+/* бегущая телеметрия в блоке марок */
+@keyframes signal-run {
+  to {
+    transform: translateX(-50%);
+  }
+}
+.signal-run {
+  animation: signal-run 14s linear infinite;
+}
+@keyframes live-dot {
+  50% {
+    opacity: 0.25;
+  }
+}
+.live-dot {
+  animation: live-dot 1.6s ease-in-out infinite;
+}
+
+/* «Меньше движения» в системе: анимации остаются плавными, но спокойнее и без размытия
+   (владелец сайта попросил анимации и при этой настройке Windows). */
 @media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
-  .chrome-text,
-  .metal-orb,
-  .metal-ring,
-  .orbit-spin,
-  .orbit-counter,
-  .ring-spin,
-  .pin-pulse {
-    animation: none;
-  }
-  .card-glint {
-    transition: none;
-  }
   .rise {
-    animation: fade-in 0.4s ease both;
+    animation-name: rise-soft;
+    animation-duration: 0.9s;
   }
-  /* текст виден сразу и не зависит от скрипта анимации */
-  [data-reveal] {
-    opacity: 1 !important;
-    filter: none !important;
-    transform: none !important;
+  .chrome-text {
+    animation-duration: 12s;
+  }
+}
+@keyframes rise-soft {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
   }
 }

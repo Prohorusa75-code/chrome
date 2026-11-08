@@ -1,97 +1,175 @@
 "use client";
 
 import { AnimatePresence, motion } from "motion/react";
-import { X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
-/* Орбита марок (по мотивам «Radial Orbital Timeline» с 21st.dev — компонент не удалось скачать
-   из-за лимита аккаунта, собран по описанию задания): хромированная сфера в центре,
-   8 пилюль на внешней орбите, полный оборот за 90 с, подписи всегда горизонтальны.
-   Клик по марке раскрывает карточку; орбита при этом останавливается.
-   На экранах уже 480px орбита превращается в сетку пилюль 2×4. */
+/* Тахометр марок: шкала-прибор, стрелка плавно переходит от марки к марке,
+   в центре — оборудование и типовые работы выбранной марки.
+   Сам перебирает марки; наведение останавливает, клик выбирает.
+   На экранах уже 480px подписи уходят под прибор сеткой 2×4. */
 
 type Brand = { name: string; tools: string; work: string };
 
+const CX = 300;
+const polar = (deg: number, r: number) => {
+  const a = ((deg - 90) * Math.PI) / 180;
+  return [CX + Math.cos(a) * r, CX + Math.sin(a) * r];
+};
+
+const TICKS = Array.from({ length: 120 }, (_, i) => {
+  const deg = i * 3;
+  const major = i % 15 === 0;
+  const mid = i % 5 === 0;
+  const [x1, y1] = polar(deg, 248);
+  const [x2, y2] = polar(deg, major ? 222 : mid ? 233 : 240);
+  return { x1, y1, x2, y2, major, mid };
+});
+
 export function RadialOrbitalTimeline({ brands }: { brands: Brand[] }) {
-  const [active, setActive] = useState<number | null>(null);
-  const toggle = (i: number) => setActive((a) => (a === i ? null : i));
-  const current = active === null ? null : brands[active];
+  const [active, setActive] = useState(0);
+  const [turn, setTurn] = useState(0); // накопленный угол, чтобы стрелка шла коротким путём
+  const [paused, setPaused] = useState(false);
+  const [userPicked, setUserPicked] = useState(false);
+  const box = useRef<HTMLDivElement>(null);
+  const inView = useRef(false);
+  const step = 360 / brands.length;
+
+  const go = (i: number) => {
+    setActive((cur) => {
+      let delta = ((i - cur) * step) % 360;
+      if (delta > 180) delta -= 360;
+      if (delta < -180) delta += 360;
+      setTurn((t) => t + delta);
+      return i;
+    });
+  };
+
+  useEffect(() => {
+    const el = box.current;
+    if (!el) return;
+    const io = new IntersectionObserver(([e]) => (inView.current = e.isIntersecting), { threshold: 0.3 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (paused || userPicked) return;
+    const id = setInterval(() => {
+      if (!inView.current) return;
+      setActive((cur) => {
+        setTurn((t) => t + step);
+        return (cur + 1) % brands.length;
+      });
+    }, 3200);
+    return () => clearInterval(id);
+  }, [paused, userPicked, brands.length, step]);
+
+  // выбрал вручную — через 10 секунд прибор снова листает сам
+  useEffect(() => {
+    if (!userPicked) return;
+    const id = setTimeout(() => setUserPicked(false), 10000);
+    return () => clearTimeout(id);
+  }, [userPicked, active]);
+
+  const pick = (i: number) => {
+    setUserPicked(true);
+    go(i);
+  };
 
   const pill = (i: number, extra = "") =>
     cn(
-      "inline-flex h-11 items-center justify-center rounded-full border px-4 text-[14px] whitespace-nowrap transition-[background-color,border-color,color,transform] duration-300 hover:-translate-y-0.5",
-      active === i ? "chrome-fill border-transparent" : "border-line-strong bg-[#0c0c0f]/90 text-text hover:border-[#3a3a40]",
+      "chip-fill inline-flex h-11 items-center justify-center rounded-full border bg-[#0c0c0f] px-4 text-[14px] whitespace-nowrap transition-[border-color,color,transform,box-shadow] duration-[450ms] hover:-translate-y-0.5",
+      active === i ? "border-transparent text-[#08080a] shadow-[0_0_26px_rgba(255,255,255,.22)]" : "border-line-strong text-text hover:border-[#4a4a50]",
       extra,
     );
+  const cur = brands[active];
 
   return (
-    <div className="relative">
-      {/* орбита — от 480px */}
-      <div className={cn("relative mx-auto hidden aspect-square w-full max-w-[560px] [container-type:inline-size] min-[480px]:block", active !== null && "orbit-paused")}>
-        <div className="absolute inset-[9%] rounded-full border border-line-strong" aria-hidden="true" />
-        <div className="absolute inset-[27%] rounded-full border border-dashed border-line-strong/80" aria-hidden="true" />
-        {/* сфера */}
-        <div className="absolute top-1/2 left-1/2 size-[clamp(100px,25%,140px)] -translate-x-1/2 -translate-y-1/2" aria-hidden="true">
-          <div className="absolute -inset-6 rounded-full bg-white/10 blur-2xl" />
-          <div className="relative size-full rounded-full shadow-[0_0_60px_rgba(255,255,255,.18)]" style={{ background: "radial-gradient(circle at 35% 30%, #fff, #9a9aa1 40%, #2a2a2e 75%)" }} />
+    <div ref={box} onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
+      <div className="relative mx-auto aspect-square w-full max-w-[600px] [container-type:inline-size]">
+        <svg viewBox="0 0 600 600" className="absolute inset-0 size-full" aria-hidden="true">
+          <defs>
+            <radialGradient id="dial-face" cx="50%" cy="42%" r="62%">
+              <stop offset="0" stopColor="#17171b" />
+              <stop offset="1" stopColor="#08080a" />
+            </radialGradient>
+            <linearGradient id="dial-needle" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stopColor="#ffffff" />
+              <stop offset="1" stopColor="#6e6e74" />
+            </linearGradient>
+            <linearGradient id="dial-rim" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stopColor="#6e6e74" />
+              <stop offset=".35" stopColor="#f4f4f6" />
+              <stop offset=".65" stopColor="#3a3a40" />
+              <stop offset="1" stopColor="#bdbdc3" />
+            </linearGradient>
+          </defs>
+
+          <circle cx={CX} cy={CX} r="262" fill="url(#dial-face)" stroke="url(#dial-rim)" strokeWidth="1.5" />
+
+          {/* шкала медленно вращается, как и орбита в задании */}
+          <g className="orbit-spin" style={{ transformOrigin: "300px 300px" }}>
+            {TICKS.map((t, i) => (
+              <line key={i} x1={t.x1} y1={t.y1} x2={t.x2} y2={t.y2} stroke={t.major ? "#bdbdc3" : t.mid ? "#5a5a61" : "#2e2e34"} strokeWidth={t.major ? 2.5 : 1.2} />
+            ))}
+          </g>
+          <circle className="orbit-counter" cx={CX} cy={CX} r="196" fill="none" stroke="#3a3a40" strokeDasharray="2 9" style={{ transformOrigin: "300px 300px" }} />
+
+          {/* стрелка со шлейфом */}
+          <g style={{ transform: `rotate(${turn}deg)`, transformOrigin: "300px 300px", transition: "transform 1.1s cubic-bezier(.34,1.35,.64,1)" }}>
+            <path d="M300 300 L300 72 A228 228 0 0 0 228 84 Z" fill="#ffffff" opacity=".05" />
+            <path d="M300 300 L300 72 A228 228 0 0 0 266 75 Z" fill="#ffffff" opacity=".07" />
+            <polygon points="296,152 304,152 301,70 299,70" fill="url(#dial-needle)" />
+            <circle cx="300" cy="70" r="5" fill="#fff" />
+            <circle cx="300" cy="70" r="15" fill="#fff" opacity=".14" />
+          </g>
+
+          <circle cx={CX} cy={CX} r="150" fill="#0b0b0e" stroke="#26262b" />
+        </svg>
+
+        {/* показания в центре */}
+        <div id="brand-card" aria-live={userPicked ? "polite" : "off"} className="absolute top-1/2 left-1/2 w-[46cqw] -translate-x-1/2 -translate-y-1/2 text-center">
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={cur.name}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.36, ease: [0.2, 0.7, 0.2, 1] }}
+            >
+              <p className="chrome-text text-[clamp(20px,6cqw,34px)] leading-[1.08] font-light tracking-[-0.03em]">{cur.name}</p>
+              <p className="mt-[1.6cqw] text-[clamp(12px,2.4cqw,14px)] text-text">{cur.tools}</p>
+              <p className="mt-[1cqw] text-[clamp(11px,2.2cqw,13px)] leading-[1.35] text-text-muted">{cur.work}</p>
+            </motion.div>
+          </AnimatePresence>
         </div>
-        {/* вращающееся кольцо с марками */}
-        <ul className="orbit-spin absolute inset-[9%]" aria-label="Марки, с которыми работаем">
+
+        {/* подписи вокруг прибора — от 480px */}
+        <ul className="absolute inset-0 hidden min-[480px]:block" aria-label="Марки, с которыми работаем">
           {brands.map((b, i) => {
-            const angle = (i / brands.length) * 360 - 90;
+            const a = (((i * step - 90) * Math.PI) / 180);
             return (
-              <li
-                key={b.name}
-                className="absolute top-1/2 left-1/2"
-                style={{ transform: `rotate(${angle}deg) translateX(41cqw) rotate(${-angle}deg)` }}
-              >
-                <div className="orbit-counter -translate-x-1/2 -translate-y-1/2">
-                  <button type="button" aria-pressed={active === i} aria-controls="brand-card" onClick={() => toggle(i)} className={pill(i)}>
-                    {b.name}
-                  </button>
-                </div>
+              <li key={b.name} className="absolute -translate-x-1/2 -translate-y-1/2" style={{ left: `${50 + Math.cos(a) * 43.5}%`, top: `${50 + Math.sin(a) * 43.5}%` }}>
+                <button type="button" aria-pressed={active === i} aria-controls="brand-card" onClick={() => pick(i)} className={pill(i)}>
+                  {b.name}
+                </button>
               </li>
             );
           })}
         </ul>
       </div>
 
-      {/* сетка пилюль — до 480px */}
-      <ul className="grid grid-cols-2 gap-2 min-[480px]:hidden" aria-label="Марки, с которыми работаем">
+      {/* подписи сеткой — до 480px */}
+      <ul className="mt-6 grid grid-cols-2 gap-2 min-[480px]:hidden" aria-label="Марки, с которыми работаем">
         {brands.map((b, i) => (
           <li key={b.name}>
-            <button type="button" aria-pressed={active === i} aria-controls="brand-card" onClick={() => toggle(i)} className={pill(i, "w-full")}>
+            <button type="button" aria-pressed={active === i} aria-controls="brand-card" onClick={() => pick(i)} className={pill(i, "w-full")}>
               {b.name}
             </button>
           </li>
         ))}
       </ul>
-
-      {/* карточка выбранной марки */}
-      <div id="brand-card" aria-live="polite" className="mt-6 min-h-[1px] min-[480px]:absolute min-[480px]:inset-x-0 min-[480px]:bottom-0 min-[480px]:mt-0">
-        <AnimatePresence>
-          {current && (
-            <motion.div
-              key={current.name}
-              initial={{ opacity: 0, y: 12, filter: "blur(6px)" }}
-              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-              exit={{ opacity: 0, y: 12, filter: "blur(6px)" }}
-              transition={{ duration: 0.35, ease: [0.2, 0.7, 0.2, 1] }}
-              className="relative mx-auto max-w-[420px] rounded-[24px] border border-line-strong bg-[#0c0c0f]/95 p-6 backdrop-blur-md"
-            >
-              <button type="button" onClick={() => setActive(null)} aria-label="Закрыть" className="absolute top-2 right-2 grid size-11 place-items-center rounded-full text-text-muted hover:text-text">
-                <X className="size-4" strokeWidth={1.5} />
-              </button>
-              <p className="chrome-text text-2xl font-light tracking-[-0.03em]">{current.name}</p>
-              <p className="mt-3 text-[13px] tracking-[0.2em] text-text-muted uppercase">Оборудование</p>
-              <p className="text-text">{current.tools}</p>
-              <p className="mt-3 text-[13px] tracking-[0.2em] text-text-muted uppercase">Что делаем</p>
-              <p className="text-text">{current.work}</p>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
     </div>
   );
 }

@@ -3,7 +3,7 @@
 import { motion, useReducedMotion } from "motion/react";
 import type { ReactNode } from "react";
 
-/* Появление при прокрутке: снизу вверх, из размытия. При «меньше движения» — только проявление. */
+/* Появление при прокрутке: снизу вверх, из размытия. При «меньше движения» — тоже плавно, но без размытия и с меньшим сдвигом. */
 export function Reveal({ children, delay = 0, className, y = 30, blur = 8, duration = 0.8, once = true }: {
   children: ReactNode;
   delay?: number;
@@ -16,13 +16,12 @@ export function Reveal({ children, delay = 0, className, y = 30, blur = 8, durat
   const reduce = useReducedMotion();
   return (
     <motion.div
-      data-reveal
       className={className}
-      initial={reduce ? { opacity: 0, y: 0, filter: "blur(0px)" } : { opacity: 0, y, filter: `blur(${blur}px)` }}
+      initial={reduce ? { opacity: 0, y: 16, filter: "blur(0px)" } : { opacity: 0, y, filter: `blur(${blur}px)` }}
       // конечное состояние всегда без сдвига и размытия — даже если сервер отдал блок «размытым»
       whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
       viewport={{ once, margin: "-80px" }}
-      transition={{ duration: reduce ? 0.3 : duration, delay: reduce ? 0 : delay, ease: [0.2, 0.7, 0.2, 1] }}
+      transition={{ duration: reduce ? 0.7 : duration, delay, ease: [0.2, 0.7, 0.2, 1] }}
     >
       {children}
     </motion.div>

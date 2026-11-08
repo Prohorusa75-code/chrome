@@ -50,7 +50,6 @@ export function AnimatedTestimonials({ testimonials, autoplay = true, interval =
           <div className="absolute inset-[2px] grid place-items-center rounded-full bg-[#0c0c0f]">
             <AnimatePresence mode="wait">
               <motion.span
-                data-reveal
                 key={active}
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -67,22 +66,20 @@ export function AnimatedTestimonials({ testimonials, autoplay = true, interval =
         <div className="min-h-[260px] text-center md:min-h-[230px] md:text-left">
           <AnimatePresence mode="wait">
             <motion.figure
-              data-reveal
               key={active}
-              initial={{ opacity: 0, y: reduce ? 0 : 16 }}
+              initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: reduce ? 0 : -16 }}
+              exit={{ opacity: 0, y: -16 }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
             >
               <blockquote className="text-[clamp(26px,3.2vw,44px)] leading-[1.22] font-light tracking-[-0.03em] text-text">
                 <span aria-hidden="true">«</span>
                 {t.quote.split(" ").map((word, i) => (
                   <motion.span
-                    data-reveal
                     key={i}
-                    initial={reduce ? { opacity: 0, y: 0, filter: "blur(0px)" } : { filter: "blur(10px)", opacity: 0, y: 5 }}
+                    initial={reduce ? { opacity: 0, y: 5, filter: "blur(0px)" } : { filter: "blur(10px)", opacity: 0, y: 5 }}
                     animate={{ filter: "blur(0px)", opacity: 1, y: 0 }}
-                    transition={{ duration: 0.2, ease: "easeInOut", delay: reduce ? 0 : 0.02 * i }}
+                    transition={{ duration: 0.2, ease: "easeInOut", delay: 0.02 * i }}
                     className="inline-block"
                   >
                     {word}&nbsp;
